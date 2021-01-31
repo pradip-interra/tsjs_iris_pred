@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+            <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"> </script>
+    </head>
+    <body>
+	    <h2>Iris Flower Model Prediction.</h2>
+		<div style="background-color:lightgrey">
+			<h3>Multiclass, single output classifier, loading a pre-trained Iris flower model in browser from a web server.</h3>
+			<h3>Provides the features (4 features) and predict the species the flower belongs to.</h3>
+		</div>
+
+		<div id="feature">
+          <h4 id="feature-title">
+            Enter the features:
+          </h4>
+          <table id="feature-table" style="background: lightblue">
+            <tr>
+              <th>Petal length</th>
+              <th>Petal width</th>
+              <th>Sepal length</th>
+              <th>Sepal width</th>
+            </tr>
+            <tbody id="feature-body">
+              <tr>
+                <td>
+                  <input id="petal-length" value="5.1"></input>
+                </td>
+                <td>
+                  <input id="petal-width" value="3.5"></input>
+                </td>
+                <td>
+                  <input id="sepal-length" value="1.4"></input>
+                </td>
+                <td>
+                  <input id="sepal-width" value="0.2"></input>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+		
+		<div id="output">
+		    <br>
+			<button onclick="do_prediction()">Predict</button>
+			<div style="background-color: lightgreen">
+				<p id="prediction">Predicted Species: </p>
+				<small id="probablities">Predicted Probablity: </small>
+			</div>
+			<div>
+				<br>
+				<button onclick="clean_output()">Clear</button>
+			</div>
+		</div>
+		
+        <script>
+		    var model;
+			
+		    function start() {
+				startTime = new Date();
+			};
+
+			function end(step) {
+				endTime = new Date();
+				  var timeDiff = endTime - startTime; //in ms
+				  // timeDiff /= 1000;
+				  var seconds = Math.round(timeDiff);
+				  console.log(step + ' : ' + seconds + " ms.");
+			}
+			
+			function clean_output() {
+			    console.log('clear');
+				document.getElementById('prediction').innerText = 'Predicted Species: ';
+				document.getElementById('probablities').innerText = 'Predicted Probablity: ';
+			}
+			
+			function get_features() {
+			  return [
+				Number(document.getElementById('petal-length').value),
+				Number(document.getElementById('petal-width').value),
+				Number(document.getElementById('sepal-length').value),
+				Number(document.getElementById('sepal-width').value),
+			  ];
+			}
+			
+			async function load_model() {
+				console.log('Load pre-trained Iris flower model.');
+				start();
+				model = await tf.loadLayersModel('https://storage.googleapis.com/tfjs-models/tfjs/iris_v1/model.json');
+				end('Model loading to browser took');
+			}
+			
+            async function do_prediction(){
+			    console.log('Get the features.');
+				features = get_features();
+				feature_tensor = tf.tensor2d([features], [1, 4]);
+				const outputClasses = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica'];
+				
+				console.log('Prediction step.');
+				start();
+				const prediction = model.predict(feature_tensor);
+				const predicted_species = outputClasses[prediction.argMax(-1).dataSync()[0]];
+				const predicted_probablities = Array.from(prediction.dataSync());
+				end('Prediction took');
+				
+				document.getElementById('prediction').innerText += predicted_species;
+				document.getElementById('probablities').innerText += predicted_probablities;
+            }	
+
+            load_model();
+			
+        </script>
+    </body>
+</html>
